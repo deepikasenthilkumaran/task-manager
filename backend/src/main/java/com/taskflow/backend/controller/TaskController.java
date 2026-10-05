@@ -2,6 +2,7 @@ package com.taskflow.backend.controller;
 
 import com.taskflow.backend.dto.CreateTaskRequest;
 import com.taskflow.backend.dto.StatusRequest;
+import com.taskflow.backend.dto.UpdateTaskRequest;
 import com.taskflow.backend.model.Task;
 import com.taskflow.backend.service.TaskService;
 import com.taskflow.backend.service.WorkspaceService;
@@ -32,6 +33,12 @@ public class TaskController {
         return taskService.listByProject(projectId, workspaceService.currentUser(auth.getName()));
     }
 
+    @PutMapping("/api/tasks/{id}")
+    public Task update(@PathVariable Long id, @RequestBody UpdateTaskRequest req,
+                       Authentication auth) {
+        return taskService.update(id, req, workspaceService.currentUser(auth.getName()));
+    }
+
     @PutMapping("/api/tasks/{id}/status")
     public Task status(@PathVariable Long id, @RequestBody StatusRequest req, Authentication auth) {
         return taskService.changeStatus(id, req.status(), workspaceService.currentUser(auth.getName()));
@@ -41,5 +48,10 @@ public class TaskController {
     public Task assign(@PathVariable Long id, @RequestParam Long assigneeId,
                        @RequestParam(defaultValue = "false") boolean force, Authentication auth) {
         return taskService.assign(id, assigneeId, force, workspaceService.currentUser(auth.getName()));
+    }
+
+    @DeleteMapping("/api/tasks/{id}")
+    public void delete(@PathVariable Long id, Authentication auth) {
+        taskService.delete(id, workspaceService.currentUser(auth.getName()));
     }
 }
