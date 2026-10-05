@@ -29,16 +29,19 @@ public class TaskService {
     private final CommentRepository commentRepo;
     private final WorkspaceService workspaceService;
     private final WorkloadService workloadService;
+    private final NotificationService notificationService;
 
     public TaskService(TaskRepository taskRepo, ProjectRepository projectRepo,
                        UserRepository userRepo, CommentRepository commentRepo,
-                       WorkspaceService workspaceService, WorkloadService workloadService) {
+                       WorkspaceService workspaceService, WorkloadService workloadService,
+                       NotificationService notificationService) {
         this.taskRepo = taskRepo;
         this.projectRepo = projectRepo;
         this.userRepo = userRepo;
         this.commentRepo = commentRepo;
         this.workspaceService = workspaceService;
         this.workloadService = workloadService;
+        this.notificationService = notificationService;
     }
 
     private Task load(Long id) {
@@ -123,7 +126,10 @@ public class TaskService {
                     assignee.getName() + " is overloaded. Resend with force=true to assign anyway.");
         }
         t.setAssignee(assignee);
-        return taskRepo.save(t);
+        Task saved = taskRepo.save(t);
+        notificationService.notify(assignee,
+                actor.getName() + " assigned you the task: " + t.getTitle());
+        return saved;
     }
 
     @Transactional
