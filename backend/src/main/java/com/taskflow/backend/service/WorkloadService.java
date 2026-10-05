@@ -78,4 +78,9 @@ public class WorkloadService {
     public WorkloadDto suggestAssignee(Long workspaceId, User actor) {
         return workload(workspaceId, actor).get(0);
     }
+
+    public boolean isOverloaded(Long workspaceId, Long userId, User actor) {
+        return workload(workspaceId, actor).stream()
+                .anyMatch(w -> w.userId().equals(userId) && w.level().equals("OVERLOADED"));
+    }
 }

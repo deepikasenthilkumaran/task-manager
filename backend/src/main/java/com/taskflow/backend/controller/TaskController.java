@@ -38,7 +38,8 @@ public class TaskController {
     }
 
     @PutMapping("/api/tasks/{id}/assign")
-    public Task assign(@PathVariable Long id, @RequestParam Long assigneeId, Authentication auth) {
-        return taskService.assign(id, assigneeId, workspaceService.currentUser(auth.getName()));
+    public Task assign(@PathVariable Long id, @RequestParam Long assigneeId,
+                       @RequestParam(defaultValue = "false") boolean force, Authentication auth) {
+        return taskService.assign(id, assigneeId, force, workspaceService.currentUser(auth.getName()));
     }
 }

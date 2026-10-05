@@ -24,13 +24,16 @@ public class TaskService {
     private final ProjectRepository projectRepo;
     private final UserRepository userRepo;
     private final WorkspaceService workspaceService;
+    private final WorkloadService workloadService;
 
     public TaskService(TaskRepository taskRepo, ProjectRepository projectRepo,
-                       UserRepository userRepo, WorkspaceService workspaceService) {
+                       UserRepository userRepo, WorkspaceService workspaceService,
+                       WorkloadService workloadService) {
         this.taskRepo = taskRepo;
         this.projectRepo = projectRepo;
         this.userRepo = userRepo;
         this.workspaceService = workspaceService;
+        this.workloadService = workloadService;
     }
 
     private Task load(Long id) {
@@ -79,7 +82,7 @@ public class TaskService {
         return taskRepo.save(t);
     }
 
-    public Task assign(Long taskId, Long assigneeId, User actor) {
+    public Task assign(Long taskId, Long assigneeId, boolean force, User actor) {
         Task t = load(taskId);
         Long workspaceId = workspaceOf(t);
         workspaceService.requireManager(workspaceId, actor);
@@ -88,6 +91,10 @@ public class TaskService {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         workspaceService.requireMember(workspaceId, assignee);
 
+        if (!force && workloadService.isOverloaded(workspaceId, assigneeId, actor)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    assignee.getName() + " is overloaded. Resend with force=true to assign anyway.");
+        }
         t.setAssignee(assignee);
         return taskRepo.save(t);
     }
