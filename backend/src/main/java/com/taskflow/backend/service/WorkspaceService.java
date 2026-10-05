@@ -62,6 +62,22 @@ public class WorkspaceService {
         }
     }
 
+    public WorkspaceMember addMember(Long workspaceId, String email, String role, User actor) {
+        requireManager(workspaceId, actor);
+        if (!"MANAGER".equals(role) && !"MEMBER".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role must be MANAGER or MEMBER");
+        }
+        User target = userRepo.findByEmail(email).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "No user with that email"));
+        if (memberRepo.findByWorkspaceIdAndUserId(workspaceId, target.getId()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already a member");
+        }
+        WorkspaceMember m = new WorkspaceMember();
+        m.setWorkspace(workspaceRepo.findById(workspaceId).orElseThrow());
+        m.setUser(target);
+        m.setRole(role);
+        return memberRepo.save(m);
+    }
     public Project createProject(Long workspaceId, CreateProjectRequest req, User actor) {
         requireManager(workspaceId, actor);
         Project p = new Project();
