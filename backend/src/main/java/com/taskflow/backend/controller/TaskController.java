@@ -36,4 +36,9 @@ public class TaskController {
     public Task status(@PathVariable Long id, @RequestBody StatusRequest req, Authentication auth) {
         return taskService.changeStatus(id, req.status(), workspaceService.currentUser(auth.getName()));
     }
+
+    @PutMapping("/api/tasks/{id}/assign")
+    public Task assign(@PathVariable Long id, @RequestParam Long assigneeId, Authentication auth) {
+        return taskService.assign(id, assigneeId, workspaceService.currentUser(auth.getName()));
+    }
 }

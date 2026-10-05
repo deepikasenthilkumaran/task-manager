@@ -6,6 +6,7 @@ import com.taskflow.backend.model.Task;
 import com.taskflow.backend.model.User;
 import com.taskflow.backend.repository.ProjectRepository;
 import com.taskflow.backend.repository.TaskRepository;
+import com.taskflow.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,12 +22,14 @@ public class TaskService {
 
     private final TaskRepository taskRepo;
     private final ProjectRepository projectRepo;
+    private final UserRepository userRepo;
     private final WorkspaceService workspaceService;
 
     public TaskService(TaskRepository taskRepo, ProjectRepository projectRepo,
-                       WorkspaceService workspaceService) {
+                       UserRepository userRepo, WorkspaceService workspaceService) {
         this.taskRepo = taskRepo;
         this.projectRepo = projectRepo;
+        this.userRepo = userRepo;
         this.workspaceService = workspaceService;
     }
 
@@ -73,6 +76,19 @@ public class TaskService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be TODO, IN_PROGRESS or COMPLETED");
         }
         t.setStatus(status);
+        return taskRepo.save(t);
+    }
+
+    public Task assign(Long taskId, Long assigneeId, User actor) {
+        Task t = load(taskId);
+        Long workspaceId = workspaceOf(t);
+        workspaceService.requireManager(workspaceId, actor);
+
+        User assignee = userRepo.findById(assigneeId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        workspaceService.requireMember(workspaceId, assignee);
+
+        t.setAssignee(assignee);
         return taskRepo.save(t);
     }
 }
