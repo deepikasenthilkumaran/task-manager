@@ -1,8 +1,15 @@
 package com.taskflow.backend.service;
 
 import com.taskflow.backend.dto.CreateProjectRequest;
-import com.taskflow.backend.model.*;
-import com.taskflow.backend.repository.*;
+import com.taskflow.backend.dto.MemberDto;
+import com.taskflow.backend.model.Project;
+import com.taskflow.backend.model.User;
+import com.taskflow.backend.model.Workspace;
+import com.taskflow.backend.model.WorkspaceMember;
+import com.taskflow.backend.repository.ProjectRepository;
+import com.taskflow.backend.repository.UserRepository;
+import com.taskflow.backend.repository.WorkspaceMemberRepository;
+import com.taskflow.backend.repository.WorkspaceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +69,14 @@ public class WorkspaceService {
         }
     }
 
+    public List<MemberDto> listMembers(Long workspaceId, User actor) {
+        requireMember(workspaceId, actor);
+        return memberRepo.findByWorkspaceId(workspaceId).stream()
+                .map(m -> new MemberDto(m.getUser().getId(), m.getUser().getName(),
+                        m.getUser().getEmail(), m.getRole()))
+                .toList();
+    }
+
     public WorkspaceMember addMember(Long workspaceId, String email, String role, User actor) {
         requireManager(workspaceId, actor);
         if (!"MANAGER".equals(role) && !"MEMBER".equals(role)) {
@@ -78,6 +93,7 @@ public class WorkspaceService {
         m.setRole(role);
         return memberRepo.save(m);
     }
+
     public Project createProject(Long workspaceId, CreateProjectRequest req, User actor) {
         requireManager(workspaceId, actor);
         Project p = new Project();
