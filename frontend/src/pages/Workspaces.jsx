@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api.js";
+import api, { errorText } from "../api.js";
+import Navbar from "../components/Navbar.jsx";
 
 export default function Workspaces() {
   const navigate = useNavigate();
@@ -12,8 +13,8 @@ export default function Workspaces() {
     try {
       const res = await api.get("/workspaces");
       setWorkspaces(res.data);
-    } catch {
-      setError("Could not load workspaces");
+    } catch (err) {
+      setError(errorText(err, "Could not load workspaces"));
     }
   }
 
@@ -29,42 +30,32 @@ export default function Workspaces() {
       await api.post("/workspaces", { name });
       setName("");
       load();
-    } catch {
-      setError("Could not create workspace");
+    } catch (err) {
+      setError(errorText(err, "Could not create workspace"));
     }
   }
 
-  function logout() {
-    localStorage.clear();
-    navigate("/login");
-  }
-
   return (
-    <div className="page">
-      <div className="topbar">
+    <div>
+      <Navbar />
+      <div className="page">
         <h2>Your workspaces</h2>
-        <div>
-          <span>Hello, {localStorage.getItem("name")} </span>
-          <button onClick={logout}>Log out</button>
+        <form onSubmit={createWorkspace} className="row">
+          <input placeholder="New workspace name" value={name}
+                 onChange={(e) => setName(e.target.value)} />
+          <button type="submit">Create</button>
+        </form>
+        {error && <p className="error">{error}</p>}
+        <div className="grid">
+          {workspaces.map((w) => (
+            <div key={w.id} className="tile"
+                 onClick={() => navigate(`/workspaces/${w.id}`)}>
+              <h3>{w.name}</h3>
+              <p>Owner: {w.owner?.name}</p>
+            </div>
+          ))}
+          {workspaces.length === 0 && <p>No workspaces yet. Create one above.</p>}
         </div>
-      </div>
-
-      <form onSubmit={createWorkspace} className="row">
-        <input placeholder="New workspace name" value={name}
-               onChange={(e) => setName(e.target.value)} />
-        <button type="submit">Create</button>
-      </form>
-      {error && <p className="error">{error}</p>}
-
-      <div className="grid">
-        {workspaces.map((w) => (
-          <div key={w.id} className="tile"
-               onClick={() => navigate(`/workspaces/${w.id}`)}>
-            <h3>{w.name}</h3>
-            <p>Owner: {w.owner?.name}</p>
-          </div>
-        ))}
-        {workspaces.length === 0 && <p>No workspaces yet. Create one above.</p>}
       </div>
     </div>
   );

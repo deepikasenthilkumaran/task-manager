@@ -12,4 +12,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export function errorText(err, fallback = "Something went wrong") {
+  const d = err.response?.data;
+  if (typeof d === "string") return d;
+  return d?.message || fallback;
+}
+
 export default api;

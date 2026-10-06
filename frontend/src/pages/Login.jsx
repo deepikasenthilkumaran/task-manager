@@ -24,6 +24,7 @@ export default function Login() {
         const res = await api.post("/auth/login", { email, password });
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("name", res.data.name);
+                localStorage.setItem("email", email);
         navigate("/workspaces");
       }
     } catch (err) {
